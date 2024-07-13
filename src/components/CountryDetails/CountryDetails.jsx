@@ -146,9 +146,9 @@ const CountryDetails = () => {
             {countryData.borders.length !== 0 && (
                 <div className="gap-x-4">
                   <b>Border Countries: </b>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 md:grid-cols-3 gap-x-6 gap-y-2">
                     {countryData.borders.map((border) => (
-                        <Link className="px-4 py-1 shadow border rounded text-sm font-semibold" key={border} to={`/country/${border}`}>
+                        <Link className="bg-slate-200 rounded-xl ps-2" key={border} to={`/country/${border}`}>
                         {border}
                         </Link>
                     ))}
