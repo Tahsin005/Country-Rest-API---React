@@ -1,9 +1,18 @@
-# React + Vite
+# Rest Countries API Project
+Rest Countries API Project
+This project is a React.js application that utilizes the Rest Countries API to display information about all the countries in the world. 
+The application features two main pages:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+#1. Overview Page:
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-# Country-Rest-API---React
+    Displays a card layout of all countries.
+    Each card contains popular information about the country.
+    Cards are clickable, allowing users to navigate to individual country pages.
+   
+#2. Country Detail Page:
+   
+    Provides detailed information about the selected country.
+    Enhances user experience by offering comprehensive data in an organized manner.
+    The project demonstrates proficiency in React.js, API integration, and responsive design principles.
+# Live Link: 
+  https://country-rest-api-react.vercel.app/
