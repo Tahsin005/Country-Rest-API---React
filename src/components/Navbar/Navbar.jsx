@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -6,7 +7,7 @@ const Navbar = () => {
         <div className="navbar-start">
           <div className="dropdown">
           </div>
-          <a className="text-xl font-bold">Around the flags</a>
+          <Link to="/" className="text-xl font-bold">Around the flags</Link>
         </div>
         <div className="navbar-center hidden lg:flex"></div>
         <div className="navbar-end">
