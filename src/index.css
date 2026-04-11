@@ -1,8 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  font-family: 'Outfit', sans-serif;
+  --bg-dots: rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --accent-color: #0284c7; /* Sky 600 */
+}
+
+[data-theme='dark'] {
+  --bg-dots: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --accent-color: #38bdf8; /* Sky 400 */
+}
+
 body {
-    font-family: 'Raleway', sans-serif;
+  @apply bg-base-100 text-base-content min-h-screen transition-colors duration-300;
+  background-image: radial-gradient(var(--bg-dots) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-attachment: fixed;
+}
+
+/* Map Dashboard Components */
+.map-module {
+  @apply glass-effect rounded-3xl border border-base-content/5 shadow-2xl;
+}
+
+.legend-block {
+  @apply p-4 rounded-2xl bg-base-content/5 border border-base-content/10;
+}
+
+.glass-effect {
+  @apply backdrop-blur-xl border-opacity-50 transition-all duration-300;
+  background-color: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.nav-console {
+  @apply border-b border-base-content/10 sticky top-0 z-50;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(20px);
 }
