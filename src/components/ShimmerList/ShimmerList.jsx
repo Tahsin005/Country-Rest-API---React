@@ -2,41 +2,39 @@ const ShimmerList = () => {
   const skeletons = Array.from({ length: 8 });
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-24">
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+        gap: '20px',
+        marginBottom: '60px',
+      }}
+    >
       {skeletons.map((_, index) => (
-        <div 
-          key={index} 
-          className="flex flex-col map-module h-[420px] animate-pulse overflow-hidden bg-base-100/50"
+        <div
+          key={index}
+          className="glass"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            borderRadius: '20px',
+            opacity: 0.7,
+          }}
         >
-          {/* Flag Placeholder */}
-          <div className="h-[180px] bg-base-content/10 relative">
-             <div className="absolute bottom-4 left-4 w-12 h-4 bg-primary/20 rounded" />
-          </div>
-          
-          <div className="p-6 flex flex-col flex-grow space-y-6 relative">
-             {/* Abstract Lines */}
-            <div className="absolute top-0 right-0 w-12 h-12 border-t border-r border-primary/5 rounded-tr-3xl" />
+          <div
+            className="shimmer"
+            style={{ height: '170px', borderRadius: '16px 16px 0 0', flexShrink: 0 }}
+          />
 
-            {/* Title Placeholder */}
-            <div className="h-6 bg-base-content/10 rounded w-2/3" />
-            
-            {/* Stats Placeholders */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-primary/10 rounded-full" />
-                <div className="h-2 bg-base-content/5 rounded w-1/2" />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-primary/10 rounded-full" />
-                <div className="h-2 bg-base-content/5 rounded w-1/3" />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-primary/10 rounded-full" />
-                <div className="h-2 bg-base-content/5 rounded w-2/3" />
-              </div>
+          <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="shimmer" style={{ height: '18px', width: '65%', borderRadius: '8px' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="shimmer" style={{ height: '10px', width: '50%', borderRadius: '6px' }} />
+              <div className="shimmer" style={{ height: '10px', width: '38%', borderRadius: '6px' }} />
+              <div className="shimmer" style={{ height: '10px', width: '55%', borderRadius: '6px' }} />
             </div>
-
-            <div className="mt-auto h-8 bg-base-content/5 rounded w-full" />
           </div>
         </div>
       ))}
@@ -45,4 +43,3 @@ const ShimmerList = () => {
 };
 
 export default ShimmerList;
-

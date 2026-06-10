@@ -12,7 +12,6 @@ A high-performance, modern cartographic dashboard built with **React** and the *
 ### ⚡ Technical Optimizations
 - **Efficient Data Fetching**: Utilizes API **field filtering** to reduce payload size by up to 70%.
 - **Batch Border Resolution**: Resolves neighboring countries in a single batch request using `/alpha?codes=...`.
-- **Persistent Themes**: Full support for Dark and Light modes, remembered across browser sessions.
 
 ### 🔍 Intelligence & Navigation
 - **Sector Navigator**: Combine multi-region filtering with real-time sector scanning (search).

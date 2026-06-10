@@ -1,65 +1,127 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { Users, Navigation, Landmark, ChevronRight } from 'lucide-react';
+import { Users, Globe2, Landmark } from 'lucide-react';
 
 const CountryCard = ({ country }) => {
   return (
-    <Link 
-      to={`/country/${country.name.common}`} 
-      className="group flex flex-col map-module transition-all duration-500 hover:-translate-y-2 hover:border-primary/50"
+    <Link
+      to={`/country/${country.name.common}`}
+      className="card-animate glass glass-interactive"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        textDecoration: 'none',
+        color: 'inherit',
+        borderRadius: '20px',
+        overflow: 'hidden',
+      }}
     >
-      <div className='relative h-[180px] overflow-hidden'>
-        <img 
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-          src={country.flags.svg} 
-          alt={`${country.name.common} flag`} 
+      <div
+        style={{
+          position: 'relative',
+          height: '170px',
+          overflow: 'hidden',
+          borderRadius: '16px 16px 0 0',
+          flexShrink: 0,
+        }}
+      >
+        <img
+          src={country.flags.svg}
+          alt={`${country.name.common} flag`}
           loading="lazy"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'transform 700ms ease-out',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 flex items-center gap-2">
-          <div className="bg-primary px-2 py-0.5 rounded text-[10px] font-black text-primary-content uppercase tracking-tighter shadow-lg">
-            Sector {country.cca3}
-          </div>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.18) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '12px',
+            left: '12px',
+          }}
+        >
+          <span className="sector-badge">{country.cca3}</span>
         </div>
       </div>
-      
-      <div className="p-6 flex flex-col flex-grow relative">
-        {/* Abstract Coordinate Lines */}
-        <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-primary/10 rounded-tr-3xl group-hover:border-primary/30 transition-colors" />
-        
-        <h3 className="text-xl font-black mb-6 truncate uppercase tracking-tighter group-hover:text-primary transition-colors">
+
+      <div
+        style={{
+          padding: '18px 20px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          flexGrow: 1,
+        }}
+      >
+        <h3 className="country-name" style={{ margin: 0, lineHeight: 1.2 }}>
           {country.name.common}
         </h3>
-        
-        <div className="space-y-4 text-xs font-bold flex-grow">
-          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-            <Users className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase tracking-widest opacity-50">Population Data</span>
-              <span>{country.population.toLocaleString()} Units</span>
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 0',
+            }}
+          >
+            <Users style={{ width: '14px', height: '14px', color: 'rgba(60,60,67,0.40)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
+              <span className="label-xs">Population</span>
+              <span className="value-md">{country.population.toLocaleString()}</span>
             </div>
           </div>
+          <div className="sep" />
 
-          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-            <Navigation className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase tracking-widest opacity-50">Regional Sector</span>
-              <span>{country.region}</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 0',
+            }}
+          >
+            <Globe2 style={{ width: '14px', height: '14px', color: 'rgba(60,60,67,0.40)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
+              <span className="label-xs">Region</span>
+              <span className="value-md">{country.region}</span>
             </div>
           </div>
+          <div className="sep" />
 
-          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-            <Landmark className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase tracking-widest opacity-50">Administrative Hub</span>
-              <span className="truncate max-w-[140px]">{country.capital?.[0] || 'N/A'}</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 0',
+            }}
+          >
+            <Landmark style={{ width: '14px', height: '14px', color: 'rgba(60,60,67,0.40)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
+              <span className="label-xs">Capital</span>
+              <span
+                className="value-md"
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {country.capital?.[0] || '—'}
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="mt-8 pt-4 border-t border-base-content/5 flex items-center justify-between text-primary opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Open Registry</span>
-          <ChevronRight className="w-4 h-4" />
         </div>
       </div>
     </Link>
@@ -67,9 +129,7 @@ const CountryCard = ({ country }) => {
 };
 
 CountryCard.propTypes = {
-    country: PropTypes.object.isRequired
-}
+  country: PropTypes.object.isRequired,
+};
 
 export default CountryCard;
-
-

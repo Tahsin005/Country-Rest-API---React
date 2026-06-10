@@ -1,35 +1,67 @@
 import { Link } from "react-router-dom";
-import ThemeToggle from "./ThemeToggle";
-import { Globe, Compass } from 'lucide-react';
+import { Globe } from 'lucide-react';
 
 const Navbar = () => {
   return (
-    <nav className="nav-console shadow-lg">
-      <div className="max-w-screen-xl mx-auto px-6 md:px-12 flex items-center justify-between h-20">
-        <Link 
-          to="/" 
-          className="flex items-center gap-3 group transition-transform active:scale-95"
+    <nav className="nav-glass">
+      <div
+        style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '0 48px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '72px',
+        }}
+      >
+        <Link
+          to="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            textDecoration: 'none',
+            transition: 'opacity 200ms ease-out',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.82'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
-          <div className="relative">
-            <Globe className="w-8 h-8 md:w-10 md:h-10 text-primary group-hover:rotate-[30deg] transition-transform duration-700" />
-            <Compass className="w-4 h-4 md:w-5 md:h-5 text-secondary absolute -bottom-1 -right-1 group-hover:rotate-[120deg] transition-transform duration-1000" />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Globe
+              style={{
+                width: '32px',
+                height: '32px',
+                color: '#1A1A2E',
+                transition: 'transform 700ms ease-out',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'rotate(30deg)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'rotate(0deg)'}
+            />
           </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase italic">
-              World<span className="text-primary tracking-normal">Explorer</span>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+            <span
+              style={{
+                fontSize: '20px',
+                fontWeight: '800',
+                letterSpacing: '-0.5px',
+                color: '#1A1A2E',
+                fontStyle: 'italic',
+              }}
+            >
+              World<span style={{ color: '#3D3D6E', fontStyle: 'normal' }}>Explorer</span>
             </span>
-            <span className="text-[10px] font-bold opacity-30 tracking-[0.2em] uppercase">Cartographic Systems</span>
+            <span
+              className="label-xs"
+              style={{ marginTop: '2px', color: 'rgba(60,60,67,0.38)' }}
+            >
+              Cartographic Systems
+            </span>
           </div>
         </Link>
-
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-        </div>
       </div>
     </nav>
   );
 };
 
 export default Navbar;
-
-

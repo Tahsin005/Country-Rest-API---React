@@ -1,17 +1,15 @@
-import PropTypes from 'prop-types'
-import { Layers } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const FilterBox = ({ setRegion }) => {
   return (
-    <div className="relative group">
-      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-        <Layers className="w-4 h-4 text-primary opacity-50 group-focus-within:opacity-100 transition-opacity" />
-      </div>
-      <select 
-        className="select pl-12 glass-effect border-base-content/10 focus:border-primary/50 text-xs font-black tracking-widest uppercase w-full md:w-[200px]" 
+    <div className="select-wrapper">
+      <select
+        className="glass-select"
         onChange={(e) => setRegion(e.target.value)}
+        aria-label="Filter by region"
+        defaultValue=""
       >
-        <option value="">Global Regions</option>
+        <option value="">All Regions</option>
         <option value="Africa">Africa</option>
         <option value="Americas">Americas</option>
         <option value="Asia">Asia</option>

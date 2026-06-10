@@ -2,71 +2,92 @@ import { useState } from "react";
 import CountryList from "../CountryList/CountryList";
 import FilterBox from "../FilterBox/FilterBox";
 import SearchBox from "../SearchBox/SearchBox";
-import { LayoutGrid, ArrowDownAz, Compass } from 'lucide-react';
+import { ArrowDownAz, Map } from 'lucide-react';
 
 const Home = () => {
-    const [search, setSearch] = useState('');
-    const [region, setRegion] = useState('');
-    const [sortBy, setSortBy] = useState('name');
+  const [search, setSearch] = useState('');
+  const [region, setRegion] = useState('');
+  const [sortBy, setSortBy] = useState('name');
 
-    return (
-        <div className="max-w-screen-xl mx-auto px-6 md:px-12 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Navigator Header */}
-            <div className="flex flex-col gap-8 mb-16">
-                <div className="flex items-center gap-4">
-                    <Compass className="w-6 h-6 text-primary animate-pulse" />
-                    <div className="flex flex-col">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Sector Navigator</h2>
-                        <div className="flex items-center gap-2">
-                            <span className="w-8 h-[1px] bg-primary/30" />
-                            <span className="text-[10px] font-black opacity-30 uppercase tracking-[0.3em]">Orbital Scanning Active</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-8 map-module relative overflow-hidden">
-                    {/* Background decoration */}
-                    <div className="absolute top-0 right-0 w-32 h-32 border-t border-r border-primary/5 rounded-tr-3xl" />
-                    
-                    <div className="flex-1 max-w-xl">
-                        <SearchBox setSearch={setSearch} />
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-6 items-center">
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2 px-1">
-                                <ArrowDownAz className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Filter Sequence</span>
-                            </div>
-                            <select 
-                                className="select select-sm glass-effect border-base-content/10 focus:border-primary/50 text-[10px] font-black uppercase tracking-widest h-11"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                            >
-                                <option value="name">Alpha Sort</option>
-                                <option value="population">Mass / Population</option>
-                                <option value="area">Surface Area</option>
-                            </select>
-                        </div>
-                        
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2 px-1">
-                                <LayoutGrid className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Region Layer</span>
-                            </div>
-                            <FilterBox setRegion={setRegion} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <CountryList 
-                search={search} 
-                region={region} 
-                sortBy={sortBy} 
-            />
+  return (
+    <div
+      className="page-enter"
+      style={{
+        maxWidth: '1280px',
+        margin: '0 auto',
+        padding: '40px 48px 80px',
+      }}
+    >
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <Map style={{ width: '18px', height: '18px', color: 'rgba(60,60,67,0.45)' }} />
+          <h1
+            style={{
+              margin: 0,
+              fontSize: '24px',
+              fontWeight: '700',
+              letterSpacing: '-0.5px',
+              color: '#1C1C1E',
+            }}
+          >
+            World Atlas
+          </h1>
         </div>
-    );
+        <p className="label-xs" style={{ paddingLeft: '28px', margin: 0 }}>
+          {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
+
+      <div
+        className="glass glass-lg"
+        style={{
+          padding: '24px 28px',
+          marginBottom: '32px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          alignItems: 'flex-end',
+        }}
+      >
+        <div style={{ flex: '1 1 260px', minWidth: '220px' }}>
+          <span className="label-xs" style={{ display: 'block', marginBottom: '8px', paddingLeft: '2px' }}>
+            Search
+          </span>
+          <SearchBox setSearch={setSearch} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowDownAz style={{ width: '12px', height: '12px', color: 'rgba(60,60,67,0.38)' }} />
+            <span className="label-xs">Sort by</span>
+          </div>
+          <div className="select-wrapper">
+            <select
+              className="glass-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort countries"
+            >
+              <option value="name">Name (A–Z)</option>
+              <option value="population">Population</option>
+              <option value="area">Area</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span className="label-xs">Region</span>
+          <FilterBox setRegion={setRegion} />
+        </div>
+      </div>
+
+      <CountryList
+        search={search}
+        region={region}
+        sortBy={sortBy}
+      />
+    </div>
+  );
 };
 
 export default Home;

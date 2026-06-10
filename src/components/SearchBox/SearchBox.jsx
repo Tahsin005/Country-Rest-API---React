@@ -1,27 +1,43 @@
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 import { Search } from 'lucide-react';
 
 const SearchBox = ({ setSearch }) => {
-    return (
-        <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-primary opacity-50 group-focus-within:opacity-100 transition-opacity" />
-            </div>
-            <input 
-                onChange={(e) => setSearch(e.target.value)} 
-                type="text" 
-                placeholder="SCAN SECTOR / COUNTRY NAME..." 
-                className="input w-full pl-12 glass-effect border-base-content/10 focus:border-primary/50 text-xs font-black tracking-widest uppercase placeholder:opacity-30 h-14" 
-            />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black opacity-20 tracking-tighter uppercase whitespace-nowrap hidden sm:block">
-                Sector Searcher v1.0
-            </div>
-        </div>
-    );
+  return (
+    <div
+      className="glass-inset"
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: '14px',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          left: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          pointerEvents: 'none',
+        }}
+      >
+        <Search style={{ width: '16px', height: '16px', color: 'rgba(60,60,67,0.38)' }} />
+      </div>
+
+      <input
+        type="text"
+        className="search-input"
+        placeholder="Search countries…"
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ borderRadius: '14px' }}
+        aria-label="Search countries"
+      />
+    </div>
+  );
 };
 
 SearchBox.propTypes = {
-    setSearch: PropTypes.func.isRequired,
-}
+  setSearch: PropTypes.func.isRequired,
+};
 
 export default SearchBox;
