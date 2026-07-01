@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import CountryCard from "../CountryCard/CountryCard";
 import PropTypes from 'prop-types';
 import ShimmerList from "../ShimmerList/ShimmerList";
@@ -9,6 +9,9 @@ const CountryList = ({ search, region, sortBy }) => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const initialMount = useRef(true);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -21,28 +24,52 @@ const CountryList = ({ search, region, sortBy }) => {
         setError(err.message);
       } finally {
         setLoading(false);
+        hasLoaded.current = true;
       }
     };
 
     fetchCountries();
   }, []);
 
+  useEffect(() => {
+    if (initialMount.current) {
+      initialMount.current = false;
+      return;
+    }
+
+    if (!hasLoaded.current) return;
+
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+      setIsFiltering(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [search, region, sortBy]);
+
   const filteredAndSortedCountries = useMemo(() => {
     return countries
       .filter((country) => {
-        const matchesSearch = country.name.common.toLowerCase().includes(search.toLowerCase());
+        const matchesSearch = country.names.common.toLowerCase().includes(search.toLowerCase());
         const matchesRegion = region === '' || country.region === region;
         return matchesSearch && matchesRegion;
       })
       .sort((a, b) => {
-        if (sortBy === 'name') return a.name.common.localeCompare(b.name.common);
-        if (sortBy === 'population') return b.population - a.population;
-        if (sortBy === 'area') return b.area - a.area;
+        if (sortBy === 'name') {
+          const nameA = a.names?.common || '';
+          const nameB = b.names?.common || '';
+          return nameA.localeCompare(nameB);
+        }
+        if (sortBy === 'population') {
+          return (b.population || 0) - (a.population || 0);
+        }
+        if (sortBy === 'area') {
+          return (b.area?.kilometers || 0) - (a.area?.kilometers || 0);
+        }
         return 0;
       });
   }, [countries, search, region, sortBy]);
 
-  if (loading) return <ShimmerList />;
+  if (loading || isFiltering) return <ShimmerList />;
 
   if (error) return (
     <div
@@ -72,7 +99,7 @@ const CountryList = ({ search, region, sortBy }) => {
           }}
         >
           {filteredAndSortedCountries.map((country) => (
-            <CountryCard key={country.cca3} country={country} />
+            <CountryCard key={country.codes?.alpha_3} country={country} />
           ))}
         </div>
       ) : (

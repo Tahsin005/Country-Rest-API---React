@@ -5,7 +5,7 @@ import { Users, Globe2, Landmark } from 'lucide-react';
 const CountryCard = ({ country }) => {
   return (
     <Link
-      to={`/country/${country.name.common}`}
+      to={`/country/${country.names.common}`}
       className="card-animate glass glass-interactive"
       style={{
         display: 'flex',
@@ -26,8 +26,8 @@ const CountryCard = ({ country }) => {
         }}
       >
         <img
-          src={country.flags.svg}
-          alt={`${country.name.common} flag`}
+          src={country.flag?.url_svg || "https://placehold.co/600x400"}
+          alt={`${country.names.common} flag`}
           loading="lazy"
           style={{
             width: '100%',
@@ -53,7 +53,7 @@ const CountryCard = ({ country }) => {
             left: '12px',
           }}
         >
-          <span className="sector-badge">{country.cca3}</span>
+          <span className="sector-badge">{country.codes?.alpha_3}</span>
         </div>
       </div>
 
@@ -67,7 +67,7 @@ const CountryCard = ({ country }) => {
         }}
       >
         <h3 className="country-name" style={{ margin: 0, lineHeight: 1.2 }}>
-          {country.name.common}
+          {country.names.common}
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -118,7 +118,7 @@ const CountryCard = ({ country }) => {
                 className="value-md"
                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
-                {country.capital?.[0] || '—'}
+                {country.capitals?.[0]?.name || '—'}
               </span>
             </div>
           </div>

@@ -3,16 +3,15 @@ import { Globe } from 'lucide-react';
 
 const Navbar = () => {
   return (
-    <nav className="nav-glass">
-      <div
+    <div style={{ position: 'sticky', top: '24px', zIndex: 100, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+      <nav 
+        className="glass-pill"
         style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 48px',
+          pointerEvents: 'auto',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          height: '72px',
+          padding: '12px 24px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
         }}
       >
         <Link
@@ -24,43 +23,45 @@ const Navbar = () => {
             textDecoration: 'none',
             transition: 'opacity 200ms ease-out',
           }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.82'}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.04)',
+              borderRadius: '50%',
+              padding: '6px'
+            }}
+          >
             <Globe
               style={{
-                width: '32px',
-                height: '32px',
-                color: '#1A1A2E',
+                width: '24px',
+                height: '24px',
+                color: '#1C1C1E',
                 transition: 'transform 700ms ease-out',
               }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'rotate(30deg)'}
+              onMouseEnter={e => e.currentTarget.style.transform = 'rotate(45deg)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'rotate(0deg)'}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
             <span
               style={{
-                fontSize: '20px',
+                fontSize: '18px',
                 fontWeight: '800',
                 letterSpacing: '-0.5px',
-                color: '#1A1A2E',
-                fontStyle: 'italic',
+                color: '#1C1C1E',
               }}
             >
-              World<span style={{ color: '#3D3D6E', fontStyle: 'normal' }}>Explorer</span>
-            </span>
-            <span
-              className="label-xs"
-              style={{ marginTop: '2px', color: 'rgba(60,60,67,0.38)' }}
-            >
-              Cartographic Systems
+              World<span style={{ color: 'rgba(60,60,67,0.5)', fontWeight: '600' }}>Atlas</span>
             </span>
           </div>
         </Link>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 };
 

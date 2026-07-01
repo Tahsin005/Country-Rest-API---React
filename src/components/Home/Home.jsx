@@ -1,13 +1,31 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import CountryList from "../CountryList/CountryList";
 import FilterBox from "../FilterBox/FilterBox";
 import SearchBox from "../SearchBox/SearchBox";
-import { ArrowDownAz, Map } from 'lucide-react';
+import { ArrowDownAz, Map, ChevronDown } from 'lucide-react';
+
+const sortOptions = [
+  { value: 'name', label: 'Name (A–Z)' },
+  { value: 'population', label: 'Population' },
+  { value: 'area', label: 'Area' }
+];
 
 const Home = () => {
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('');
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState(sortOptions[0]);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div
@@ -47,6 +65,8 @@ const Home = () => {
           flexWrap: 'wrap',
           gap: '16px',
           alignItems: 'flex-end',
+          overflow: 'visible',
+          zIndex: 10,
         }}
       >
         <div style={{ flex: '1 1 260px', minWidth: '220px' }}>
@@ -61,17 +81,80 @@ const Home = () => {
             <ArrowDownAz style={{ width: '12px', height: '12px', color: 'rgba(60,60,67,0.38)' }} />
             <span className="label-xs">Sort by</span>
           </div>
-          <div className="select-wrapper">
-            <select
+          <div className="custom-select-wrapper" ref={sortRef} style={{ position: 'relative', minWidth: '180px' }}>
+            <button
+              onClick={() => setIsSortOpen(!isSortOpen)}
               className="glass-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort countries"
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 16px',
+                border: '1px solid rgba(255,255,255,0.6)',
+                background: isSortOpen ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.35)',
+              }}
             >
-              <option value="name">Name (A–Z)</option>
-              <option value="population">Population</option>
-              <option value="area">Area</option>
-            </select>
+              <span style={{ fontSize: '13px', fontWeight: '500', color: '#1C1C1E' }}>{sortBy.label}</span>
+              <ChevronDown 
+                style={{ 
+                  width: '14px', 
+                  height: '14px', 
+                  color: 'rgba(60,60,67,0.5)',
+                  transform: isSortOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 200ms ease'
+                }} 
+              />
+            </button>
+
+            {isSortOpen && (
+              <div
+                className="glass"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: 0,
+                  right: 0,
+                  padding: '8px',
+                  borderRadius: '16px',
+                  zIndex: 50,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+                  animation: 'card-enter 200ms ease-out forwards',
+                }}
+              >
+                {sortOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setSortBy(opt); setIsSortOpen(false); }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      textAlign: 'left',
+                      background: sortBy.value === opt.value ? 'rgba(255,255,255,0.4)' : 'transparent',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                      fontWeight: sortBy.value === opt.value ? '600' : '500',
+                      color: '#1C1C1E',
+                      transition: 'background 150ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (sortBy.value !== opt.value) e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (sortBy.value !== opt.value) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -84,7 +167,7 @@ const Home = () => {
       <CountryList
         search={search}
         region={region}
-        sortBy={sortBy}
+        sortBy={sortBy.value}
       />
     </div>
   );
