@@ -5,7 +5,7 @@ import ShimmerDetails from "../ShimmerDetails/ShimmerDetails";
 import {
   ArrowLeft, Map, Users, Languages,
   Coins, Car, ExternalLink, Landmark,
-  Navigation, LayoutGrid
+  Navigation, LayoutGrid, Globe
 } from 'lucide-react';
 
 const StatRow = ({ label, value, icon: Icon }) => (
