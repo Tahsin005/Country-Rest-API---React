@@ -60,8 +60,8 @@ World Atlas connects multiple live open APIs to deliver comprehensive demographi
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Tahsin005/country-rest-api.git
-cd country-rest-api
+git clone git@github.com:Tahsin005/world-atlas.git
+cd world-atlas
 ```
 
 ### 2. Install Dependencies
