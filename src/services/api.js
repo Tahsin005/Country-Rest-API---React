@@ -4,6 +4,24 @@ const API_TOKEN = import.meta.env.VITE_RESTCOUNTRIES_API_TOKEN || 'rc_live_6e4ea
 // In-memory cache
 const memoryCache = new Map();
 
+// Lazy load fallback countries from local JSON bundle or public folder
+let fallbackDataPromise = null;
+const loadFallbackCountries = async () => {
+  if (!fallbackDataPromise) {
+    fallbackDataPromise = (async () => {
+      try {
+        const module = await import('../data/countriesFallback.json');
+        return module.default || module;
+      } catch (err) {
+        console.warn('Direct import of countriesFallback.json failed, fetching from /data:', err);
+        const res = await fetch('/data/countriesFallback.json');
+        return await res.json();
+      }
+    })();
+  }
+  return fallbackDataPromise;
+};
+
 const getFromStorage = (key) => {
   try {
     const item = sessionStorage.getItem(`atlas_cache_${key}`);
@@ -67,10 +85,20 @@ export const countryApi = {
       return stored;
     }
 
-    const data = await fetchAllPaginated(BASE_URL);
-    memoryCache.set(cacheKey, data);
-    setToStorage(cacheKey, data);
-    return data;
+    try {
+      const data = await fetchAllPaginated(BASE_URL);
+      if (Array.isArray(data) && data.length > 0) {
+        memoryCache.set(cacheKey, data);
+        setToStorage(cacheKey, data);
+        return data;
+      }
+      throw new Error('Empty response from Rest Countries API');
+    } catch (err) {
+      console.warn('REST Countries API error or rate-limited. Falling back to local offline dataset:', err);
+      const fallback = await loadFallbackCountries();
+      memoryCache.set(cacheKey, fallback);
+      return fallback;
+    }
   },
 
   getByName: async (name) => {
@@ -83,32 +111,79 @@ export const countryApi = {
       return stored;
     }
 
-    const data = await fetchWithToken(`${BASE_URL}?q=${encodeURIComponent(name)}&limit=1`);
-    if (!data.data.objects || data.data.objects.length === 0) {
+    try {
+      const data = await fetchWithToken(`${BASE_URL}?q=${encodeURIComponent(name)}&limit=1`);
+      if (data.data?.objects && data.data.objects.length > 0) {
+        const country = data.data.objects[0];
+        memoryCache.set(cacheKey, country);
+        setToStorage(cacheKey, country);
+        return country;
+      }
+      throw new Error(`Country ${name} not found in API`);
+    } catch (err) {
+      console.warn(`REST Countries API query failed for "${name}". Using fallback dataset:`, err);
+      const fallbackList = await loadFallbackCountries();
+      const target = decodeURIComponent(name).toLowerCase().trim();
+
+      const found =
+        fallbackList.find((c) => {
+          const common = c.names?.common?.toLowerCase();
+          const official = c.names?.official?.toLowerCase();
+          const alpha2 = c.codes?.alpha_2?.toLowerCase();
+          const alpha3 = c.codes?.alpha_3?.toLowerCase();
+          const alternates = c.names?.alternates?.map((a) => a.toLowerCase()) || [];
+          return (
+            common === target ||
+            official === target ||
+            alpha2 === target ||
+            alpha3 === target ||
+            alternates.includes(target)
+          );
+        }) ||
+        fallbackList.find((c) => {
+          const common = c.names?.common?.toLowerCase() || '';
+          return common.includes(target) || target.includes(common);
+        });
+
+      if (found) {
+        memoryCache.set(cacheKey, found);
+        return found;
+      }
+
       throw new Error(`Country ${name} not found`);
     }
-    const country = data.data.objects[0];
-    memoryCache.set(cacheKey, country);
-    setToStorage(cacheKey, country);
-    return country;
   },
 
   getByCodes: async (codes) => {
     if (!codes || codes.length === 0) return [];
 
-    const promises = codes.map((code) => {
+    const promises = codes.map(async (code) => {
       const codeKey = `code_${code}`;
-      if (memoryCache.has(codeKey)) return Promise.resolve(memoryCache.get(codeKey));
+      if (memoryCache.has(codeKey)) return memoryCache.get(codeKey);
 
-      return fetchWithToken(`${BASE_URL}/codes.alpha_3/${code}`)
-        .then((res) => {
-          if (res?.data?.objects?.[0]) {
-            memoryCache.set(codeKey, res.data.objects[0]);
-            return res.data.objects[0];
-          }
-          return null;
-        })
-        .catch(() => null);
+      try {
+        const res = await fetchWithToken(`${BASE_URL}/codes.alpha_3/${code}`);
+        if (res?.data?.objects?.[0]) {
+          memoryCache.set(codeKey, res.data.objects[0]);
+          return res.data.objects[0];
+        }
+        throw new Error('Not found in API');
+      } catch {
+        const fallbackList = await loadFallbackCountries();
+        const upper = code.toUpperCase();
+        const found = fallbackList.find(
+          (c) =>
+            c.codes?.alpha_3?.toUpperCase() === upper ||
+            c.codes?.alpha_2?.toUpperCase() === upper ||
+            c.borders?.includes(upper) ||
+            c.names?.common?.toUpperCase() === upper
+        );
+        if (found) {
+          memoryCache.set(codeKey, found);
+          return found;
+        }
+        return null;
+      }
     });
 
     const results = await Promise.all(promises);
@@ -119,8 +194,21 @@ export const countryApi = {
     const cacheKey = `region_${region.toLowerCase()}`;
     if (memoryCache.has(cacheKey)) return memoryCache.get(cacheKey);
 
-    const data = await fetchAllPaginated(`${BASE_URL}?region=${encodeURIComponent(region)}`);
-    memoryCache.set(cacheKey, data);
-    return data;
+    try {
+      const data = await fetchAllPaginated(`${BASE_URL}?region=${encodeURIComponent(region)}`);
+      if (Array.isArray(data) && data.length > 0) {
+        memoryCache.set(cacheKey, data);
+        return data;
+      }
+      throw new Error('Empty region response');
+    } catch (err) {
+      console.warn(`REST Countries API query failed for region "${region}". Using fallback dataset:`, err);
+      const fallbackList = await loadFallbackCountries();
+      const filtered = fallbackList.filter(
+        (c) => c.region?.toLowerCase() === region.toLowerCase()
+      );
+      memoryCache.set(cacheKey, filtered);
+      return filtered;
+    }
   },
 };
