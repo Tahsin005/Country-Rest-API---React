@@ -1,16 +1,17 @@
-import './App.css'
-import './index.css'
-import Navbar from './components/Navbar/Navbar'
+import Navbar from './components/Navbar/Navbar';
+import AmbientBackground from './components/AmbientBackground/AmbientBackground';
 import { Outlet } from 'react-router-dom';
 
 function App() {
   return (
-    <div style={{ isolation: 'isolate', minHeight: '100vh' }}>
-      <div className="page-vignette" aria-hidden="true" />
+    <div className="relative min-h-screen text-foreground selection:bg-primary/30 selection:text-white">
+      <AmbientBackground />
       <Navbar />
-      <Outlet />
+      <main className="relative z-10">
+        <Outlet />
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

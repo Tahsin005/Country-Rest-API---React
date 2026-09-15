@@ -1,138 +1,67 @@
-const ShimmerBlock = ({ width = '100%', height, radius = '10px', style = {} }) => (
+import PropTypes from 'prop-types';
+
+const ShimmerBlock = ({ width = '100%', height = '20px', radius = '0.75rem', className = '' }) => (
   <div
-    className="shimmer"
-    style={{ width, height, borderRadius: radius, flexShrink: 0, ...style }}
+    className={`skeleton flex-shrink-0 ${className}`}
+    style={{ width, height, borderRadius: radius }}
   />
 );
 
+ShimmerBlock.propTypes = {
+  width: PropTypes.string,
+  height: PropTypes.string,
+  radius: PropTypes.string,
+  className: PropTypes.string,
+};
+
 const ShimmerDetails = () => {
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          minHeight: '400px',
-          overflow: 'hidden',
-          background: 'rgba(255,252,245,0.4)',
-        }}
-      >
-        <div
-          className="shimmer"
-          style={{ position: 'absolute', inset: 0, borderRadius: 0, opacity: 0.4 }}
-        />
-
-        <div
-          style={{
-            maxWidth: '1280px',
-            margin: '0 auto',
-            padding: '40px 48px',
-            position: 'relative',
-            zIndex: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '60px' }}>
-            <ShimmerBlock width="90px" height="36px" radius="100px" />
-            <ShimmerBlock width="70px" height="36px" radius="100px" />
+    <div className="min-h-screen pb-24">
+      <div className="relative w-full min-h-[380px] overflow-hidden bg-white/5 border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 flex flex-col justify-between h-full">
+          <div className="flex justify-between items-center mb-16">
+            <ShimmerBlock width="90px" height="38px" radius="9999px" />
+            <ShimmerBlock width="80px" height="38px" radius="9999px" />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '48px', flexWrap: 'wrap' }}>
-            <div
-              className="glass"
-              style={{ padding: '12px', borderRadius: '24px', flexShrink: 0 }}
-            >
-              <ShimmerBlock width="220px" height="140px" radius="16px" />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', paddingBottom: '10px' }}>
-              <ShimmerBlock width="120px" height="12px" radius="6px" />
-              <ShimmerBlock width="320px" height="60px" radius="12px" />
+          <div className="flex flex-col md:flex-row md:items-end gap-8">
+            <ShimmerBlock width="200px" height="130px" radius="1.25rem" />
+            <div className="space-y-3">
+              <ShimmerBlock width="140px" height="14px" />
+              <ShimmerBlock width="320px" height="50px" radius="1rem" />
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '24px auto 0',
-          padding: '0 48px',
-        }}
-      >
-        {/* Stats strip */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '48px' }}>
+      <div className="max-w-6xl mx-auto px-4 md:px-8 mt-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="glass-pill"
-              style={{
-                flex: '1 1 auto',
-                padding: '14px 28px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-              }}
-            >
-              <ShimmerBlock width="18px" height="18px" radius="50%" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <ShimmerBlock width="60px" height="10px" radius="6px" />
-                <ShimmerBlock width="100px" height="18px" radius="8px" />
+            <div key={i} className="glass-pill p-4 flex items-center gap-3">
+              <ShimmerBlock width="24px" height="24px" radius="9999px" />
+              <div className="space-y-1.5 flex-1">
+                <ShimmerBlock width="40%" height="10px" />
+                <ShimmerBlock width="70%" height="16px" />
               </div>
             </div>
           ))}
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-            gap: '32px',
-          }}
-        >
-          <div className="glass glass-lg" style={{ padding: '32px', gridRow: 'span 2', minHeight: '280px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.4)' }}>
-              <ShimmerBlock width="15px" height="15px" radius="50%" />
-              <ShimmerBlock width="80px" height="10px" radius="6px" />
-            </div>
-            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
-              <ShimmerBlock width="80px" height="64px" radius="10px" />
-              <ShimmerBlock width="200px" height="36px" radius="10px" />
-              <ShimmerBlock width="140px" height="12px" radius="6px" />
-            </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="glass-card p-6 space-y-4">
+            <ShimmerBlock width="40%" height="16px" />
+            <ShimmerBlock width="100%" height="180px" />
           </div>
 
-          <div className="glass glass-lg" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.4)' }}>
-              <ShimmerBlock width="15px" height="15px" radius="50%" />
-              <ShimmerBlock width="80px" height="10px" radius="6px" />
-            </div>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 0', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-                <ShimmerBlock width="16px" height="16px" radius="50%" />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <ShimmerBlock width="60px" height="10px" radius="5px" />
-                  <ShimmerBlock width="140px" height="16px" radius="7px" />
-                </div>
-              </div>
-            ))}
+          <div className="glass-card p-6 space-y-4">
+            <ShimmerBlock width="50%" height="16px" />
+            <ShimmerBlock width="100%" height="180px" />
           </div>
 
-          <div className="glass glass-lg" style={{ padding: '32px', gridRow: 'span 2', minHeight: '280px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.4)' }}>
-              <ShimmerBlock width="15px" height="15px" radius="50%" />
-              <ShimmerBlock width="140px" height="10px" radius="6px" />
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', paddingTop: '8px' }}>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <ShimmerBlock key={i} width={`${60 + (i * 17) % 50}px`} height="38px" radius="100px" />
-              ))}
-            </div>
-            <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-              <ShimmerBlock height="52px" radius="12px" />
-            </div>
+          <div className="glass-card p-6 space-y-4">
+            <ShimmerBlock width="45%" height="16px" />
+            <ShimmerBlock width="100%" height="180px" />
           </div>
         </div>
       </div>

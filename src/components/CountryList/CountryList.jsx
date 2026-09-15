@@ -1,57 +1,39 @@
-import { useEffect, useState, useMemo, useRef } from "react";
-import CountryCard from "../CountryCard/CountryCard";
+import { useState, useEffect, useMemo } from "react";
 import PropTypes from 'prop-types';
+import CountryCard from "../CountryCard/CountryCard";
 import ShimmerList from "../ShimmerList/ShimmerList";
-import { countryApi } from "../../services/api";
-import { Globe } from 'lucide-react';
+import { useAllCountries } from "../../hooks/useQueries";
+import { favoritesStorage } from "../../services/favoritesStorage";
+import { Globe, AlertCircle } from 'lucide-react';
 
-const CountryList = ({ search, region, sortBy }) => {
-  const [countries, setCountries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const initialMount = useRef(true);
-  const hasLoaded = useRef(false);
+const CountryList = ({ search = '', region = '', sortBy = 'name', showSavedOnly = false }) => {
+  const { data: countries = [], isLoading, error } = useAllCountries();
+  const [favorites, setFavorites] = useState(favoritesStorage.getFavorites());
 
   useEffect(() => {
-    const fetchCountries = async () => {
-      setLoading(true);
-      try {
-        const data = await countryApi.getAll();
-        setCountries(data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-        hasLoaded.current = true;
-      }
-    };
-
-    fetchCountries();
+    const unsubscribe = favoritesStorage.subscribe((favs) => {
+      setFavorites(favs);
+    });
+    return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    if (initialMount.current) {
-      initialMount.current = false;
-      return;
-    }
-
-    if (!hasLoaded.current) return;
-
-    setIsFiltering(true);
-    const timer = setTimeout(() => {
-      setIsFiltering(false);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [search, region, sortBy]);
 
   const filteredAndSortedCountries = useMemo(() => {
     return countries
       .filter((country) => {
-        const matchesSearch = country.names.common.toLowerCase().includes(search.toLowerCase());
+        const name = country.names?.common?.toLowerCase() || '';
+        const matchesSearch = name.includes(search.toLowerCase());
         const matchesRegion = region === '' || country.region === region;
-        return matchesSearch && matchesRegion;
+
+        let matchesSaved = true;
+        if (showSavedOnly) {
+          const code = country.codes?.alpha_3?.toLowerCase() || '';
+          matchesSaved = favorites.some((f) =>
+            (f.code && f.code.toLowerCase() === code) ||
+            (f.name && f.name.toLowerCase() === name)
+          );
+        }
+
+        return matchesSearch && matchesRegion && matchesSaved;
       })
       .sort((a, b) => {
         if (sortBy === 'name') {
@@ -67,59 +49,44 @@ const CountryList = ({ search, region, sortBy }) => {
         }
         return 0;
       });
-  }, [countries, search, region, sortBy]);
+  }, [countries, search, region, sortBy, showSavedOnly, favorites]);
 
-  if (loading || isFiltering) return <ShimmerList />;
+  if (isLoading) return <ShimmerList />;
 
-  if (error) return (
-    <div
-      className="glass"
-      style={{
-        maxWidth: '400px',
-        margin: '48px auto',
-        padding: '28px 32px',
-        textAlign: 'center',
-      }}
-    >
-      <p style={{ color: '#8B3A3A', fontSize: '14px', fontWeight: '500', margin: 0 }}>
-        {error}
-      </p>
-    </div>
-  );
+  if (error) {
+    return (
+      <div className="glass-card max-w-md mx-auto p-8 text-center rounded-2xl border border-rose-500/30">
+        <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-3" />
+        <p className="text-sm font-semibold text-rose-300 mb-1">Failed to connect to Atlas Network</p>
+        <p className="text-xs text-muted-foreground">{error?.message || 'Network error'}</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: '400px' }}>
+    <div className="min-h-[400px]">
       {filteredAndSortedCountries.length > 0 ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: '20px',
-            marginBottom: '60px',
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {filteredAndSortedCountries.map((country) => (
-            <CountryCard key={country.codes?.alpha_3} country={country} />
+            <CountryCard
+              key={country.codes?.alpha_3 || country.names?.common}
+              country={country}
+            />
           ))}
         </div>
       ) : (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '80px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-          }}
-        >
-          <Globe style={{ width: '48px', height: '48px', color: 'rgba(60,60,67,0.20)' }} />
+        <div className="glass-card p-16 text-center rounded-3xl max-w-lg mx-auto flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+            <Globe className="w-8 h-8 text-muted-foreground/40" />
+          </div>
           <div>
-            <p style={{ fontSize: '18px', fontWeight: '600', color: 'rgba(60,60,67,0.30)', margin: '0 0 4px' }}>
-              No countries found
-            </p>
-            <p style={{ fontSize: '13px', color: 'rgba(60,60,67,0.22)', margin: 0 }}>
-              Try adjusting your search or region filter
+            <h3 className="font-display font-bold text-xl text-foreground mb-1">
+              No matching records found
+            </h3>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+              {showSavedOnly
+                ? 'You have not bookmarked any countries yet. Click the heart icon on any card to save it!'
+                : 'Try adjusting your search criteria or changing the region filter to scan other sectors.'}
             </p>
           </div>
         </div>
@@ -132,12 +99,7 @@ CountryList.propTypes = {
   search: PropTypes.string,
   region: PropTypes.string,
   sortBy: PropTypes.string,
-};
-
-CountryList.defaultProps = {
-  search: '',
-  region: '',
-  sortBy: 'name',
+  showSavedOnly: PropTypes.bool,
 };
 
 export default CountryList;

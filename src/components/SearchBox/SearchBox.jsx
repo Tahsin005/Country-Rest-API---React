@@ -3,33 +3,16 @@ import { Search } from 'lucide-react';
 
 const SearchBox = ({ setSearch }) => {
   return (
-    <div
-      className="glass-inset"
-      style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        borderRadius: '14px',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          left: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          pointerEvents: 'none',
-        }}
-      >
-        <Search style={{ width: '16px', height: '16px', color: 'rgba(60,60,67,0.38)' }} />
+    <div className="relative flex items-center w-full">
+      <div className="absolute left-4 flex items-center pointer-events-none text-muted-foreground">
+        <Search className="w-4 h-4 text-primary" />
       </div>
 
       <input
         type="text"
-        className="search-input"
-        placeholder="Search countries…"
+        className="glass-input pl-11 pr-4 py-3 text-sm font-display rounded-xl w-full text-foreground placeholder:text-muted-foreground/60 focus:ring-1 focus:ring-primary/40 focus:border-primary/50"
+        placeholder="Scan country database by name…"
         onChange={(e) => setSearch(e.target.value)}
-        style={{ borderRadius: '14px' }}
         aria-label="Search countries"
       />
     </div>

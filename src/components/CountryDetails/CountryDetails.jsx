@@ -1,492 +1,384 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from 'prop-types';
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { countryApi } from "../../services/api";
+import { useCountryByName, useBorderCountries } from "../../hooks/useQueries";
+import { favoritesStorage } from "../../services/favoritesStorage";
 import ShimmerDetails from "../ShimmerDetails/ShimmerDetails";
+import CapitalClock from "../CapitalClock/CapitalClock";
+import WeatherWidget from "../WeatherWidget/WeatherWidget";
+import CurrencyConverter from "../CurrencyConverter/CurrencyConverter";
+import InteractiveMap from "../InteractiveMap/InteractiveMap";
+import WikiSummary from "../WikiSummary/WikiSummary";
+import HolidaysList from "../HolidaysList/HolidaysList";
 import {
   ArrowLeft, Map, Users, Languages,
   Coins, Car, ExternalLink, Landmark,
-  Navigation, LayoutGrid, Globe
+  Globe, Heart, ShieldCheck, Share2
 } from 'lucide-react';
 
 const StatRow = ({ label, value, icon: Icon }) => (
-  <>
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '14px 0' }}>
-      {Icon && (
-        <Icon
-          style={{ width: '16px', height: '16px', color: 'rgba(60,60,67,0.38)', marginTop: '2px', flexShrink: 0 }}
-        />
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-        <span className="label-11">{label}</span>
-        <span
-          style={{
-            fontSize: '16px',
-            fontWeight: '500',
-            color: '#1C1C1E',
-            wordBreak: 'break-word',
-          }}
-        >
-          {value}
-        </span>
-      </div>
+  <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-none">
+    <div className="flex items-center gap-2.5 text-muted-foreground">
+      {Icon && <Icon className="w-4 h-4 text-primary flex-shrink-0" />}
+      <span className="font-display text-xs">{label}</span>
     </div>
-  </>
-);
-
-const GlassCard = ({ children, style = {} }) => (
-  <div className="glass glass-lg" style={{ padding: '32px', ...style }}>
-    {children}
+    <span className="font-display text-sm font-semibold text-foreground text-right">
+      {value || '—'}
+    </span>
   </div>
 );
+
+StatRow.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  icon: PropTypes.elementType,
+};
 
 const SectionHeader = ({ icon: Icon, label }) => (
-  <div style={{ marginBottom: '4px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '16px' }}>
-      {Icon && <Icon style={{ width: '15px', height: '15px', color: 'rgba(60,60,67,0.40)' }} />}
-      <span className="label-xs" style={{ fontSize: '11px' }}>{label}</span>
-    </div>
-    <div className="sep-glass" />
+  <div className="flex items-center gap-2 pb-3 mb-4 border-b border-white/10">
+    {Icon && <Icon className="w-4 h-4 text-primary" />}
+    <span className="section-label text-xs tracking-wider">{label}</span>
   </div>
 );
 
+SectionHeader.propTypes = {
+  icon: PropTypes.elementType,
+  label: PropTypes.string.isRequired,
+};
+
 const CountryDetails = () => {
-  const params = useParams();
-  const countryName = params.countryName;
+  const { countryName } = useParams();
   const navigate = useNavigate();
 
-  const [countryData, setCountryData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { data: rawCountryData, isLoading, isError } = useCountryByName(countryName);
+  const { data: borderCountriesData = [] } = useBorderCountries(rawCountryData?.borders);
+
+  const [copied, setCopied] = useState(false);
+
+  const countryData = useMemo(() => {
+    if (!rawCountryData) return null;
+
+    const primaryCurrency = rawCountryData.currencies?.[0];
+    const capitalObj = rawCountryData.capitals?.[0];
+
+    const borderNames = borderCountriesData.map((c) => c.names?.common || c.codes?.alpha_3);
+
+    return {
+      name: rawCountryData.names?.common,
+      nativeName: rawCountryData.names?.native ? Object.values(rawCountryData.names.native)[0]?.common : undefined,
+      population: rawCountryData.population,
+      area: rawCountryData.area?.kilometers,
+      region: rawCountryData.region,
+      subregion: rawCountryData.subregion,
+      capital: rawCountryData.capitals?.map((c) => c.name),
+      capitalName: capitalObj?.name || '',
+      capitalCoords: capitalObj?.coordinates || rawCountryData.coordinates,
+      coordinates: rawCountryData.coordinates,
+      flag: rawCountryData.flag?.url_svg,
+      tld: rawCountryData.tlds?.[0],
+      languages: rawCountryData.languages?.map((l) => l.name).join(', '),
+      currencies: rawCountryData.currencies?.map((c) => `${c.name}${c.symbol ? ` (${c.symbol})` : ''}`).join(', '),
+      currencyCode: primaryCurrency?.code || '',
+      currencySymbol: primaryCurrency?.symbol || '',
+      currencyName: primaryCurrency?.name || '',
+      borders: borderNames.length > 0 ? borderNames : (rawCountryData.borders || []),
+      maps: rawCountryData.links?.google_maps,
+      carSide: rawCountryData.cars?.driving_side,
+      cca3: rawCountryData.codes?.alpha_3,
+      cca2: rawCountryData.codes?.alpha_2,
+      timezones: rawCountryData.timezones,
+      memberships: rawCountryData.memberships || {},
+    };
+  }, [rawCountryData, borderCountriesData]);
+
+  const isSaved = favoritesStorage.isFavorite(countryData?.cca3 || countryData?.name);
 
   const handleBackButton = () => navigate(-1);
 
-  const processCountryData = async (data) => {
-    const processed = {
-      name: data.names?.common,
-      nativeName: data.names?.native ? Object.values(data.names.native)[0]?.common : undefined,
-      population: data.population,
-      area: data.area?.kilometers,
-      region: data.region,
-      subregion: data.subregion,
-      capital: data.capitals?.map(c => c.name),
-      flag: data.flag?.url_svg,
-      tld: data.tlds?.[0],
-      languages: data.languages?.map(l => l.name).join(", "),
-      currencies: data.currencies?.map(c => `${c.name}${c.symbol ? ` (${c.symbol})` : ''}`).join(", "),
-      currencySymbol: data.currencies?.[0]?.symbol || '',
-      currencyName: data.currencies?.[0]?.name || '',
-      borders: [],
-      maps: data.links?.google_maps,
-      carSide: data.cars?.driving_side,
-      cca3: data.codes?.alpha_3,
-    };
+  const handleToggleFavorite = () => {
+    if (!countryData) return;
+    favoritesStorage.toggleFavorite(countryData);
+  };
 
-    setCountryData(processed);
-    setLoading(false);
-
-    if (data.borders && data.borders.length > 0) {
-      try {
-        const borderCountries = await countryApi.getByCodes(data.borders);
-        setCountryData(prev => ({
-          ...prev,
-          borders: borderCountries.map(c => c.names?.common || c.codes?.alpha_3),
-        }));
-      } catch (err) {
-        console.error("Failed to fetch borders", err);
-      }
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await countryApi.getByName(countryName);
-        if (isMounted) processCountryData(data);
-      } catch (err) {
-        if (isMounted) {
-          setNotFound(true);
-          setLoading(false);
-        }
-      }
-    };
-    fetchData();
-    return () => { isMounted = false; };
-  }, [countryName]);
+  if (isLoading) return <ShimmerDetails />;
 
-  if (loading) return <ShimmerDetails />;
+  if (isError || !countryData) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+        <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground/20 mb-4 tracking-tighter">
+          Not Found
+        </h1>
+        <p className="text-muted-foreground text-sm max-w-sm mb-6">
+          The requested country could not be located in the planetary registry.
+        </p>
+        <button onClick={() => navigate('/')} className="btn-primary-glass">
+          Return to World Atlas
+        </button>
+      </div>
+    );
+  }
 
-  if (notFound) return (
-    <div
-      style={{
-        textAlign: 'center',
-        padding: '80px 20px',
-      }}
-    >
-      <h1 style={{ fontSize: '48px', fontWeight: '800', color: 'rgba(60,60,67,0.12)', margin: '0 0 32px' }}>
-        Not Found
-      </h1>
-      <button
-        onClick={() => navigate('/')}
-        className="btn-accent-solid"
-      >
-        Return to Atlas
-      </button>
-    </div>
-  );
+  const activeMemberships = Object.entries(countryData.memberships)
+    .filter(([, active]) => Boolean(active))
+    .map(([org]) => org.replace('_', ' ').toUpperCase());
 
   return (
-    <div
-      className="page-enter"
-      style={{ minHeight: '100vh', paddingBottom: '80px' }}
-    >
-      {countryData && (
-        <div style={{ position: 'relative', width: '100%', minHeight: '400px', overflow: 'hidden' }}>
-          <div
-            style={{
-              position: 'absolute',
-              inset: '-50px',
-              backgroundImage: `url(${countryData.flag})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(50px) saturate(180%) brightness(1.2)',
-              opacity: 0.35,
-              zIndex: 0,
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(to bottom, rgba(245, 240, 232, 0.1) 0%, rgba(245, 240, 232, 1) 100%)',
-              zIndex: 1,
-            }}
-          />
+    <div className="min-h-screen pb-24">
+      <div className="relative w-full min-h-[420px] overflow-hidden border-b border-white/10">
+        <div
+          className="absolute inset-[-40px] pointer-events-none"
+          style={{
+            backgroundImage: `url(${countryData.flag})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(60px) saturate(200%) brightness(0.55)',
+            opacity: 0.45,
+            zIndex: 0,
+          }}
+        />
 
-          <div
-            style={{
-              maxWidth: '1280px',
-              margin: '0 auto',
-              padding: '40px 48px',
-              position: 'relative',
-              zIndex: 2,
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-          >
-            {/* Nav Row */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '60px'
-              }}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(13, 10, 25, 0.75) 70%, hsl(var(--background)) 100%)',
+            zIndex: 1,
+          }}
+        />
+
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 relative z-10 flex flex-col justify-between h-full min-h-[420px]">
+          <div className="flex items-center justify-between mb-12">
+            <button
+              type="button"
+              onClick={handleBackButton}
+              className="glass-pill px-4 py-2 flex items-center gap-2 text-xs font-display font-semibold hover:border-white/30 text-foreground transition-all"
             >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
+            </button>
+
+            <div className="flex items-center gap-3">
               <button
-                className="btn-back glass glass-pill"
-                onClick={handleBackButton}
-                style={{ padding: '8px 24px' }}
+                type="button"
+                onClick={handleShare}
+                className="glass-pill px-3 py-2 flex items-center gap-1.5 text-xs font-display font-semibold text-muted-foreground hover:text-foreground transition-all"
+                title="Copy share link"
               >
-                <ArrowLeft style={{ width: '15px', height: '15px' }} />
-                Back
+                <Share2 className="w-3.5 h-3.5" />
+                <span>{copied ? 'Copied!' : 'Share'}</span>
               </button>
 
-              <div
-                className="glass-pill"
-                style={{
-                  padding: '8px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: 'rgba(60,60,67,0.5)',
-                  letterSpacing: '0.04em',
-                }}
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className={`glass-pill px-4 py-2 flex items-center gap-2 text-xs font-display font-semibold transition-all ${
+                  isSaved
+                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                    : 'text-foreground hover:border-white/30'
+                }`}
               >
-                <span>{countryData?.cca3}</span>
-                <span style={{ opacity: 0.4 }}>·</span>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '10px' }}>v5</span>
+                <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
+                <span>{isSaved ? 'Saved' : 'Bookmark'}</span>
+              </button>
+
+              <div className="glass-pill px-3.5 py-2 font-mono text-xs font-bold text-primary border border-primary/30">
+                {countryData.cca3}
               </div>
             </div>
+          </div>
 
-            <div className="hero-content" style={{ display: 'flex', alignItems: 'flex-end', gap: '48px', flexWrap: 'wrap' }}>
-              <div
-                className="glass"
-                style={{
-                  padding: '12px',
-                  borderRadius: '24px',
-                  boxShadow: '0 24px 48px rgba(0,0,0,0.15)',
-                  flexShrink: 0,
-                }}
-              >
-                <img
-                  src={countryData?.flag || "https://placehold.co/600x400"}
-                  alt={`${countryData.name} flag`}
-                  style={{
-                    width: '220px',
-                    height: '140px',
-                    objectFit: 'contain',
-                    borderRadius: '16px',
-                    display: 'block',
-                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                  }}
-                />
-              </div>
+          <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8 pt-6">
+            <div className="glass-card p-2.5 rounded-2xl flex-shrink-0 shadow-2xl border border-white/20 w-44 md:w-56 bg-black/40">
+              <img
+                src={countryData.flag || 'https://placehold.co/600x400'}
+                alt={`${countryData.name} flag`}
+                className="w-full h-28 md:h-36 object-contain rounded-xl"
+              />
+            </div>
 
-              <div style={{ paddingBottom: '10px' }}>
-                <p
-                  className="label-xs"
-                  style={{ margin: '0 0 10px', letterSpacing: '0.08em', fontSize: '13px' }}
-                >
-                  {countryData.nativeName || countryData.name}
-                </p>
-                <h1
-                  style={{
-                    margin: 0,
-                    fontSize: 'clamp(48px, 8vw, 84px)',
-                    fontWeight: '800',
-                    letterSpacing: '-2px',
-                    color: '#0D0D0F',
-                    lineHeight: 1.05,
-                  }}
-                >
-                  {countryData.name}
-                </h1>
-              </div>
+            <div className="flex-1 space-y-1">
+              <span className="section-label text-xs tracking-wider text-primary">
+                {countryData.nativeName || countryData.name}
+              </span>
+              <h1 className="font-display text-[clamp(36px,6vw,72px)] font-bold tracking-tighter text-foreground leading-none">
+                {countryData.name}
+              </h1>
+              <p className="text-sm font-display text-muted-foreground pt-1">
+                {countryData.region} {countryData.subregion ? `· ${countryData.subregion}` : ''}
+              </p>
+            </div>
+
+            <div className="flex-shrink-0 self-start md:self-end">
+              <CapitalClock
+                capitalName={countryData.capitalName}
+                timezoneStr={countryData.timezones?.[0]}
+                coordinates={countryData.capitalCoords}
+              />
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {countryData && (
-        <div
-          style={{
-            maxWidth: '1280px',
-            margin: '0 auto',
-            padding: '0 48px',
-            marginTop: '24px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '16px',
-              marginBottom: '48px',
-            }}
-          >
-            <div className="glass-pill" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 28px', flex: '1 1 auto' }}>
-              <Users style={{ width: '18px', height: '18px', color: 'rgba(60,60,67,0.4)' }} />
-              <div>
-                <div className="label-xs" style={{ marginBottom: '4px' }}>Population</div>
-                <div style={{ fontSize: '17px', fontWeight: '600' }}>{countryData.population.toLocaleString()}</div>
-              </div>
+      <div className="max-w-6xl mx-auto px-4 md:px-8 mt-10 space-y-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glass-panel p-4 flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 text-primary" />
             </div>
-
-            <div className="glass-pill" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 28px', flex: '1 1 auto' }}>
-              <Map style={{ width: '18px', height: '18px', color: 'rgba(60,60,67,0.4)' }} />
-              <div>
-                <div className="label-xs" style={{ marginBottom: '4px' }}>Area</div>
-                <div style={{ fontSize: '17px', fontWeight: '600' }}>{countryData.area ? `${countryData.area.toLocaleString()} km²` : '—'}</div>
-              </div>
-            </div>
-
-            <div className="glass-pill" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 28px', flex: '1 1 auto' }}>
-              <Landmark style={{ width: '18px', height: '18px', color: 'rgba(60,60,67,0.4)' }} />
-              <div>
-                <div className="label-xs" style={{ marginBottom: '4px' }}>Capital</div>
-                <div style={{ fontSize: '17px', fontWeight: '600' }}>{countryData.capital?.join(", ") || '—'}</div>
-              </div>
-            </div>
-
-            <div className="glass-pill" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 28px', flex: '1 1 auto' }}>
-              <Globe style={{ width: '18px', height: '18px', color: 'rgba(60,60,67,0.4)' }} />
-              <div>
-                <div className="label-xs" style={{ marginBottom: '4px' }}>Region</div>
-                <div style={{ fontSize: '17px', fontWeight: '600' }}>{`${countryData.region}${countryData.subregion ? ` · ${countryData.subregion}` : ''}`}</div>
-              </div>
+            <div>
+              <span className="section-label text-[10px] block">Population</span>
+              <span className="font-mono text-base font-bold text-foreground">
+                {countryData.population ? countryData.population.toLocaleString() : '—'}
+              </span>
             </div>
           </div>
 
-          <div
-            className="details-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-              gap: '32px',
-            }}
-          >
-            <GlassCard style={{ gridRow: 'span 2', display: 'flex', flexDirection: 'column' }}>
-              <SectionHeader icon={Coins} label="Economy" />
-              <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 0' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
-                  {countryData.currencySymbol && (
+          <div className="glass-panel p-4 flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-accent-2/15 border border-accent-2/30 flex items-center justify-center flex-shrink-0">
+              <Map className="w-5 h-5 text-accent-2" />
+            </div>
+            <div>
+              <span className="section-label text-[10px] block">Total Area</span>
+              <span className="font-mono text-base font-bold text-foreground">
+                {countryData.area ? `${countryData.area.toLocaleString()} km²` : '—'}
+              </span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-accent-3/15 border border-accent-3/30 flex items-center justify-center flex-shrink-0">
+              <Landmark className="w-5 h-5 text-accent-3" />
+            </div>
+            <div>
+              <span className="section-label text-[10px] block">Capital City</span>
+              <span className="font-display text-sm font-bold text-foreground truncate block max-w-[140px]">
+                {countryData.capital?.join(', ') || '—'}
+              </span>
+            </div>
+          </div>
+
+          <div className="glass-panel p-4 flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+              <Globe className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <span className="section-label text-[10px] block">Global Sector</span>
+              <span className="font-display text-sm font-bold text-foreground truncate block max-w-[140px]">
+                {countryData.region}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <WeatherWidget
+            coordinates={countryData.capitalCoords || countryData.coordinates}
+            locationName={countryData.capitalName || countryData.name}
+          />
+
+          <InteractiveMap
+            lat={countryData.coordinates?.lat || countryData.capitalCoords?.lat}
+            lng={countryData.coordinates?.lng || countryData.capitalCoords?.lng}
+            countryName={countryData.name}
+            capitalName={countryData.capitalName}
+            flagUrl={countryData.flag}
+          />
+        </div>
+
+        <WikiSummary countryName={countryData.name} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CurrencyConverter
+            baseCurrencyCode={countryData.currencyCode}
+            baseCurrencyName={countryData.currencyName}
+            baseCurrencySymbol={countryData.currencySymbol}
+          />
+
+          <HolidaysList
+            alpha2Code={countryData.cca2}
+            countryName={countryData.name}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="glass-card p-6 md:p-8 rounded-2xl">
+            <SectionHeader icon={Globe} label="Technical Indicators" />
+            <div className="space-y-1">
+              <StatRow label="Languages" value={countryData.languages} icon={Languages} />
+              <StatRow label="Currencies" value={countryData.currencies} icon={Coins} />
+              <StatRow
+                label="Traffic Orientation"
+                value={countryData.carSide === 'left' ? '← Drive on Left' : '→ Drive on Right'}
+                icon={Car}
+              />
+              <StatRow label="Internet Top-Level Domain" value={countryData.tld} icon={Globe} />
+            </div>
+
+            {activeMemberships.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span className="section-label text-[10px]">Alliances & Treaties</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {activeMemberships.map((org) => (
                     <span
-                      style={{
-                        fontSize: '64px',
-                        fontWeight: '300',
-                        color: 'rgba(60,60,67,0.25)',
-                        lineHeight: 1,
-                      }}
+                      key={org}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-display font-semibold text-foreground/80 tracking-wide"
                     >
-                      {countryData.currencySymbol}
+                      {org}
                     </span>
-                  )}
-                  <span
-                    style={{
-                      fontSize: '40px',
-                      fontWeight: '700',
-                      color: '#1C1C1E',
-                      letterSpacing: '-0.5px',
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {countryData.currencyName || countryData.currencies || '—'}
-                  </span>
+                  ))}
                 </div>
-                {countryData.currencySymbol && countryData.currencyName && (
-                  <span className="label-xs" style={{ paddingLeft: '4px', fontSize: '13px' }}>
-                    {countryData.currencies}
-                  </span>
-                )}
               </div>
-            </GlassCard>
+            )}
+          </div>
 
-            <GlassCard>
-              <SectionHeader icon={Navigation} label="General Info" />
-              <div style={{ paddingTop: '12px' }}>
-                <div style={{ padding: '14px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Globe style={{ width: '16px', height: '16px', color: 'rgba(60,60,67,0.38)', flexShrink: 0 }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span className="label-11">Internet Domain</span>
-                    <span
-                      style={{
-                        fontFamily: 'ui-monospace, monospace',
-                        fontSize: '15px',
-                        fontWeight: '600',
-                        color: '#1C1C1E',
-                        background: 'rgba(255,255,255,0.40)',
-                        border: '1px solid rgba(255,255,255,0.55)',
-                        borderRadius: '6px',
-                        padding: '2px 10px',
-                        display: 'inline-block',
-                      }}
+          <div className="glass-card p-6 md:p-8 rounded-2xl flex flex-col justify-between">
+            <div>
+              <SectionHeader icon={Map} label="Territorial Neighbors" />
+              {countryData.borders && countryData.borders.length > 0 ? (
+                <div className="flex flex-wrap gap-2 py-2">
+                  {countryData.borders.map((neighbor) => (
+                    <Link
+                      key={neighbor}
+                      to={`/country/${neighbor}`}
+                      className="glass-pill px-3.5 py-2 text-xs font-display font-semibold text-foreground hover:text-primary hover:border-primary/40 transition-all text-decoration-none"
                     >
-                      {countryData.tld || '—'}
-                    </span>
-                  </div>
+                      {neighbor}
+                    </Link>
+                  ))}
                 </div>
-                <div className="sep" />
-
-                <div style={{ padding: '14px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Car style={{ width: '16px', height: '16px', color: 'rgba(60,60,67,0.38)', flexShrink: 0 }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span className="label-11">Traffic Side</span>
-                    <span style={{ fontSize: '16px', fontWeight: '500', color: '#1C1C1E' }}>
-                      {countryData.carSide === 'left' ? '← Drive Left' : '→ Drive Right'}
-                    </span>
-                  </div>
-                </div>
-                <div className="sep" />
-                <StatRow icon={Languages} label="Languages" value={countryData.languages || '—'} />
-              </div>
-            </GlassCard>
-
-            <GlassCard style={{ gridRow: 'span 2' }}>
-              <SectionHeader icon={LayoutGrid} label="Neighboring Countries" />
-              <div style={{ paddingTop: '20px' }}>
-                {countryData.borders.length > 0 ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '12px',
-                    }}
-                  >
-                    {countryData.borders.map((border) => (
-                      <Link
-                        key={border}
-                        to={`/country/${border}`}
-                        className="neighbor-chip glass-pill"
-                        style={{
-                          textDecoration: 'none',
-                          color: '#1C1C1E',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          padding: '10px 20px',
-                          display: 'inline-block',
-                        }}
-                      >
-                        {border}
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      padding: '40px 0',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: '15px',
-                        color: 'rgba(60,60,67,0.4)',
-                        fontStyle: 'italic',
-                        margin: 0,
-                      }}
-                    >
-                      Island nation — no land borders
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {countryData.maps && (
-                <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                  <a
-                    href={countryData.maps}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-accent-solid"
-                    style={{ width: '100%', justifyContent: 'center', padding: '16px' }}
-                  >
-                    <Map style={{ width: '16px', height: '16px' }} />
-                    Open Interactive Map
-                    <ExternalLink style={{ width: '14px', height: '14px', opacity: 0.7 }} />
-                  </a>
+              ) : (
+                <div className="py-8 text-center text-muted-foreground text-sm font-display italic">
+                  Maritime / island state with no immediate land borders.
                 </div>
               )}
-            </GlassCard>
+            </div>
+
+            {countryData.maps && (
+              <div className="pt-6 mt-6 border-t border-white/10">
+                <a
+                  href={countryData.maps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-ghost-glass w-full justify-center text-xs font-display font-semibold"
+                >
+                  <span>Open External Satellite Map</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                </a>
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      <style>{`
-        @media (max-width: 820px) {
-          .details-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .hero-content {
-            flex-direction: column;
-            align-items: flex-start !important;
-            gap: 24px !important;
-          }
-        }
-        @media (max-width: 600px) {
-          .details-grid > div:first-child {
-            order: 2;
-          }
-          .details-grid > div:last-child {
-            order: 1;
-          }
-        }
-      `}</style>
+      </div>
     </div>
   );
 };

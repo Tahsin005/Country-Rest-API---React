@@ -2,38 +2,30 @@ const ShimmerList = () => {
   const skeletons = Array.from({ length: 8 });
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-        gap: '20px',
-        marginBottom: '60px',
-      }}
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
       {skeletons.map((_, index) => (
         <div
           key={index}
-          className="glass"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            borderRadius: '20px',
-            opacity: 0.7,
-          }}
+          className="glass-card rounded-2xl overflow-hidden border border-white/10 p-0 flex flex-col"
         >
-          <div
-            className="shimmer"
-            style={{ height: '170px', borderRadius: '16px 16px 0 0', flexShrink: 0 }}
-          />
+          <div className="skeleton h-44 w-full rounded-b-none" />
 
-          <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="shimmer" style={{ height: '18px', width: '65%', borderRadius: '8px' }} />
+          <div className="p-5 flex flex-col gap-4">
+            <div className="skeleton h-5 w-3/4 rounded-lg" />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div className="shimmer" style={{ height: '10px', width: '50%', borderRadius: '6px' }} />
-              <div className="shimmer" style={{ height: '10px', width: '38%', borderRadius: '6px' }} />
-              <div className="shimmer" style={{ height: '10px', width: '55%', borderRadius: '6px' }} />
+            <div className="space-y-3 pt-1">
+              <div className="flex justify-between items-center">
+                <div className="skeleton h-3.5 w-16" />
+                <div className="skeleton h-3.5 w-20" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="skeleton h-3.5 w-14" />
+                <div className="skeleton h-3.5 w-16" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="skeleton h-3.5 w-16" />
+                <div className="skeleton h-3.5 w-20" />
+              </div>
             </div>
           </div>
         </div>
